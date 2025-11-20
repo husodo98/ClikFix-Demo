@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pembaruan Windows —</title>
+<style>
+  :root{
+    --bg:#002050; --accent:#3aa3ff; --muted:rgba(255,255,255,0.75);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter, "Segoe UI", Arial, sans-serif;background:var(--bg);color:#e8f2ff}
+  .center-fit{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px}
+
+  /* --- SCAN SCREEN --- */
+  #scanScreen{background:linear-gradient(180deg,#001633 0%, #001a47 100%);text-align:center}
+  .card{background:rgba(255,255,255,0.03);padding:24px;border-radius:12px;max-width:760px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,0.6)}
+  .spinner{width:96px;height:96px;border:10px solid rgba(255,255,255,0.08);border-left-color:#fff;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .scan-title{font-size:22px;font-weight:700;margin-top:14px}
+  .scan-sub{color:var(--muted);margin-top:8px}
+  .os-lines{margin-top:12px;font-family:monospace;background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;color:#dfefff;text-align:left;min-height:120px;white-space:pre-wrap}
+  .btn{display:inline-block;margin-top:16px;padding:12px 18px;border-radius:10px;border:none;cursor:pointer;font-weight:700}
+  .btn-primary{background:var(--accent);color:#032233}
+  .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.08);color:var(--muted)}
+  .sim-tag{display:inline-block;margin-left:10px;padding:6px 10px;background:#ffefc6;color:#5b3c00;border-radius:999px;font-weight:700;font-size:12px}
+
+  /* --- UPDATE SCREEN --- */
+  #updateScreen{display:none;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:4vh;gap:18px}
+  .update-card{width:920px;max-width:96%;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));border-radius:12px;padding:26px;box-shadow:0 10px 40px rgba(0,0,0,0.6);color:#eaf6ff}
+  .update-head{display:flex;align-items:center;gap:16px}
+  .big-spinner{width:72px;height:72px;border:10px solid rgba(255,255,255,0.08);border-left-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
+  .title{font-size:20px;font-weight:700}
+  .subtitle{font-size:14px;color:var(--muted);margin-top:6px}
+
+  .progress-wrap{margin-top:20px;background:rgba(255,255,255,0.04);height:18px;border-radius:10px;overflow:hidden}
+  .progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#6bd0ff);transition:width .25s}
+  .progress-meta{margin-top:10px;font-size:13px;color:var(--muted);display:flex;justify-content:space-between}
+
+  .flex-row{display:flex;gap:18px;align-items:flex-start;margin-top:20px}
+  .left,.right{flex:1}
+  .script-box{background:rgba(0,0,0,0.25);padding:14px;border-radius:10px;color:#061729}
+  .visible-text{background:#f6f7fb;padding:12px;border-radius:8px;font-family:monospace;color:#111;white-space:pre-wrap}
+  .copy-btn{margin-top:10px;padding:10px 14px;background:var(--accent);border:none;border-radius:8px;color:#032233;cursor:pointer;font-weight:700}
+  .tutorial{margin-top:12px;background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;color:var(--muted);font-size:14px}
+  .notice{margin-top:12px;font-size:13px;color:#ffd1d1;padding:8px;border-radius:8px;background:rgba(255,200,200,0.03)}
+  .footer{position:fixed;left:16px;bottom:14px;font-size:12px;color:var(--muted)}
+
+  /* reveal animation for training panel */
+  .training-panel{opacity:0;transform:translateY(8px);transition:all .6s ease}
+  .training-panel.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- SCAN SCREEN -->
+<div id="scanScreen" class="center-fit">
+  <div class="card" role="region" aria-label="Mendeteksi Sistem">
+    <div class="spinner" aria-hidden="true"></div>
+    <div class="scan-title">Mendeteksi informasi sistem — <span style="opacity:.95"></span></div>
+    <div class="scan-sub">Klik Mulai Pembaruan Untuk Melanjutkan Proses Update</div>
+
+    <div id="osLines" class="os-lines" aria-live="polite">
+      <!-- JS akan isi baris-baris "membaca OS" di sini -->
+    </div>
+
+    <div style="margin-top:12px">
+      <button id="startBtn" class="btn btn-primary" aria-describedby="startDesc">Mulai Pembaruan </button>
+      <span class="sim-tag">CANCEL</span>
+    </div>
+
+    <div id="startDesc" style="margin-top:10px;color:var(--muted);font-size:13px">Klik tombol untuk melanjutkan pembaruan.</div>
+  </div>
+</div>
+
+<!-- UPDATE SCREEN -->
+<div id="updateScreen" class="center-fit" style="display:none;flex-direction:column">
+  <div class="update-card" role="region" aria-label="Windows Update">
+    <div class="update-head">
+      <div class="big-spinner" aria-hidden="true"></div>
+      <div>
+        <div class="title">Menyiapkan Pembaruan Windows <span class="sim-tag"></span></div>
+      </div>
+    </div>
+
+    <div class="progress-wrap">
+      <div id="progressBar" class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+    </div>
+    <div class="progress-meta">
+      <div id="percentText">0%</div>
+      <div id="statusText" style="color:var(--muted)">Menyiapkan paket ...</div>
+    </div>
+
+    <div class="flex-row">
+      <div class="left">
+        <div style="font-weight:700;margin-bottom:8px">Perintah </div>
+        <div class="script-box training-panel" id="trainingPanel">
+          <div class="visible-text" id="visibleCmd">wuauclt.exe /detectnow && wuauclt.exe /updatenow</div>
+          <button id="copyBtn" class="copy-btn" aria-label="Salin skrip aman">Copy Script (SALIN AMAN)</button>
+
+          <div class="tutorial">
+            <strong>Tutorial Menjalankan </strong>
+            <ol style="margin-top:8px;padding-left:18px">
+              <li>Tekan <strong>Windows</strong> + <strong>R</strong></li>
+              <li>Ketik <code>powershell</code> lalu tekan <strong>Enter</strong></li>
+              <li>Paste skrip yang disalin </li>
+              <li>Tekan <strong>Enter</strong></li>
+            </ol>
+          </div>
+          <div class="notice">Catatan: Tombol Copy menyalin <strong>skrip aman </strong> </div>
+        </div>
+      </div>
+
+      <div class="right">
+        <div style="font-weight:700;margin-bottom:8px">Hasil Pendeteksian </div>
+        <div class="script-box">
+          <div id="detectedInfo" style="font-family:monospace;white-space:pre-wrap;color:#dff6ff">
+            <!-- akan diisi JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer"></div>
+
+<script>
+/* ---------------------------
+   Data & helper functions
+   --------------------------- */
+const osLines = [
+  "Mendeteksi sistem operasi...",
+  "Memeriksa arsitektur CPU...",
+  "Memeriksa versi kernel...",
+  "Memeriksa layanan update...",
+  "Membaca informasi jaringan...",
+  "Mendeteksi zona waktu...",
+  "Mendeteksi bahasa sistem...",
+  "Selesai. Siap untuk pembaruan ."
+];
+
+const detected = {
+  "OS": "Windows 10 Pro",
+  "Build": "19045.3621 ",
+  "Arch": "x64",
+  "Hostname": "WORKSTATION-TRAIN",
+  "IP": "192.168.1.120",
+  "LastReboot": "2025-11-18 08:23:41 "
+};
+
+function typeLinesSequentially(lines, container, cb) {
+  let i = 0;
+  function next() {
+    if (i >= lines.length) { cb && cb(); return; }
+    const line = document.createElement('div');
+    line.textContent = lines[i++];
+    container.appendChild(line);
+    // scroll if overflow
+    container.scrollTop = container.scrollHeight;
+    setTimeout(next, 400 + Math.random()*600);
+  }
+  next();
+}
+
+/* ---------------------------
+   Flow: show scan -> wait for click -> show update anim -> reveal training panel
+   --------------------------- */
+const scanScreen = document.getElementById('scanScreen');
+const updateScreen = document.getElementById('updateScreen');
+const osLinesEl = document.getElementById('osLines');
+const startBtn = document.getElementById('startBtn');
+const trainingPanel = document.getElementById('trainingPanel');
+const detectedInfoEl = document.getElementById('detectedInfo');
+
+typeLinesSequentially(osLines, osLinesEl); // pre-fill scan lines
+
+// populate detected info (SIMULASI)
+detectedInfoEl.textContent = Object.entries(detected).map(([k,v]) => `${k.padEnd(12)}: ${v}`).join('\n');
+
+// Try request fullscreen for immersive sim (optional for browser)
+function tryFullscreen() {
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen().catch(()=>{/*ignored*/});
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+}
+document.addEventListener('DOMContentLoaded', tryFullscreen);
+
+// When user clicks "Mulai Pembaruan (Simulasi)"
+startBtn.addEventListener('click', () => {
+  // Hide scan and show update animation
+  scanScreen.style.display = 'none';
+  updateScreen.style.display = 'flex';
+
+  // start progress simulation
+  startProgressSimulation(() => {
+    // reveal training panel after a short delay
+    setTimeout(() => {
+      trainingPanel.classList.add('show');
+    }, 600);
+  });
+});
+
+/* ---------------------------
+   Progress simulation
+   --------------------------- */
+function startProgressSimulation(doneCallback) {
+  const bar = document.getElementById('progressBar');
+  const percentText = document.getElementById('percentText');
+  const statusText = document.getElementById('statusText');
+
+  let p = 0;
+  const steps = [
+    {label: 'Menyiapkan paket ...', max: 25},
+    {label: 'Mengunduh pembaruan ...', max: 65},
+    {label: 'Menerapkan pembaruan ...', max: 95},
+    {label: 'Menyelesaikan ...', max: 100}
+  ];
+  let stepIndex = 0;
+
+  const iv = setInterval(() => {
+    const step = steps[stepIndex];
+    p += 1 + Math.random()*5;
+    if (p >= step.max) {
+      p = step.max;
+      stepIndex++;
+      if (stepIndex >= steps.length) {
+        clearInterval(iv);
+        statusText.textContent = 'Selesai.';
+        percentText.textContent = '100%';
+        bar.style.width = '100%';
+        doneCallback && doneCallback();
+        return;
+      }
+    }
+    statusText.textContent = steps[Math.min(stepIndex, steps.length-1)].label;
+    percentText.textContent = Math.floor(p) + '%';
+    bar.style.width = Math.floor(p) + '%';
+  }, 300);
+}
+
+/* ---------------------------
+   COPY: menyalin skrip 
+   --------------------------- */
+const copyBtn = document.getElementById('copyBtn');
+copyBtn.addEventListener('click', () => {
+  // Skrip inert yang disalin  — 
+  navigator.clipboard.writeText(safeScript).then(() => {
+    const prev = copyBtn.textContent;
+    copyBtn.textContent = 'Tersalin ';
+    setTimeout(()=> copyBtn.textContent = prev, 2000);
+  }).catch(() => {
+    alert('Gagal menyalin. Silakan salin manual dari kotak di atas.');
+  });
+});
+
+/* ---------------------------
+   Accessibility: ESC to exit fullscreen
+   --------------------------- */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.fullscreenElement) {
+    document.exitFullscreen && document.exitFullscreen();
+  }
+});
+</script>
+</body>
+</html>
